@@ -23,7 +23,7 @@ use x509_parser::prelude::*;
 #[derive(Serialize, Deserialize)]
 pub struct SnpEvidence {
     attestation_report: AttestationReport,
-    cert_chain: Vec<CertTableEntry>,
+    cert_chain: Option<Vec<CertTableEntry>>,
 }
 
 const HW_ID_OID: Oid<'static> = oid!(1.3.6 .1 .4 .1 .3704 .1 .4);
@@ -83,6 +83,11 @@ impl Verifier for Snp {
             attestation_report: report,
             cert_chain,
         } = serde_json::from_slice(evidence).context("Deserialize Quote failed.")?;
+
+        let cert_chain = match cert_chain {
+            Some(c) => c,
+            None => Vec::new(),
+        };
 
         verify_report_signature(&report, &cert_chain, &self.vendor_certs)?;
 
